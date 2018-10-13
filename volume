@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+
+#################################################################
+#           Volume changer
+#              Coded by Eugene Cormier
+#               June 2017
+#################################################################
+
+
+
+# imports
+import os,sys,subprocess
+
+# variables
+volumecommand='amixer -q sset Master'
+steps=20    # this value changes the amount of each vol change
+config = [volumecommand,steps]
+
+def adjustmentamount(config):
+    value = 100 / config[1]
+    print('The rate of change will be +/- ' + str(int(value)) + '%')
+    return value
+
+
+def argparse(config,change):
+    if len(sys.argv) == 2:
+        # turn volume up/down
+        if sys.argv[1] == '+' or sys.argv[1] == '-':
+            print(config[0] + ' ' + str(int(change)) + '%' + sys.argv[1])
+            subprocess.call(config[0] + ' ' + str(int(change)) + '%' + sys.argv[1], shell = True)
+            #subprocess.call('ogg123 /usr/share/sounds/freedesktop/stereo/audio-volume-change.oga', shell = True)
+        # mute volume
+        elif sys.argv[1] == 'm':
+            print(config[0] + ' toggle')
+            subprocess.call(config[0] + ' toggle', shell = True)
+        # bad argument
+        else:
+            print(sys.argv[1] + ' is not a valid argument')
+    # no argument given
+    else:
+        print('no argument: +,-,m')
+
+def volicon():
+    currentvolume = subprocess.check_output("amixer sget Master | grep -o -m1 ...% | sed -e 's/\[//' | sed -e 's/%//'", shell = True)
+    muted = subprocess.check_output("amixer sget Master", shell = True)
+    if 'off' in str(muted):
+        print('off')
+        subprocess.call("""awesome-client 'volicon.image = "/usr/share/icons/Faenza-Dark/status/22/audio-volume-muted.png"' """, shell = True)
+    elif str(currentvolume)[2:-3] == ' 0':
+        subprocess.call("""awesome-client 'volicon.image = "/usr/share/icons/Faenza-Dark/status/22/audio-volume-off.png"' """, shell = True)
+    elif str(currentvolume)[2:-3] in str(list(range(1, 34))):
+        print('vol low')
+        subprocess.call("""awesome-client 'volicon.image = "/usr/share/icons/Faenza-Dark/status/22/audio-volume-low.png"' """, shell = True)
+    elif str(currentvolume)[2:-3] in str(list(range(34, 67))):
+        print('vol med')
+        subprocess.call("""awesome-client 'volicon.image = "/usr/share/icons/Faenza-Dark/status/22/audio-volume-medium.png"' """, shell = True)
+    elif str(currentvolume)[2:-3] in str(list(range(67, 101))):
+        print('vol high')
+        subprocess.call("""awesome-client 'volicon.image = "/usr/share/icons/Faenza-Dark/status/22/audio-volume-high.png"' """, shell = True)
+
+
+
+def main(config):
+    change = adjustmentamount(config)
+    argparse(config,change)
+    volicon()
+
+main(config)
