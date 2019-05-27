@@ -28,11 +28,17 @@ def argparse(config,change):
         if sys.argv[1] == '+' or sys.argv[1] == '-':
             print(config[0] + ' ' + str(int(change)) + '%' + sys.argv[1])
             subprocess.call(config[0] + ' ' + str(int(change)) + '%' + sys.argv[1], shell = True)
+            subprocess.call('amixer -q sset Speaker ' + str(int(change)) + '%' + sys.argv[1], shell = True)
+            subprocess.call('amixer -c 1 -q sset Speaker ' + str(int(change)) + '%' + sys.argv[1], shell = True)
+            subprocess.call('amixer -q sset PCM ' + str(int(change)) + '%' + sys.argv[1], shell = True)
+            subprocess.call('amixer -c 1 -q sset PCM ' + str(int(change)) + '%' + sys.argv[1], shell = True)
+
             #subprocess.call('ogg123 /usr/share/sounds/freedesktop/stereo/audio-volume-change.oga', shell = True)
         # mute volume
         elif sys.argv[1] == 'm':
             print(config[0] + ' toggle')
-            subprocess.call(config[0] + ' toggle', shell = True)
+            # needed to hardcode this because I'm using different channels for volume / mute
+            subprocess.call('amixer -q sset Master toggle', shell = True)
         # bad argument
         else:
             print(sys.argv[1] + ' is not a valid argument')
@@ -41,7 +47,7 @@ def argparse(config,change):
         print('no argument: +,-,m')
 
 def volicon():
-    currentvolume = subprocess.check_output("amixer sget Master | grep -o -m1 ...% | sed -e 's/\[//' | sed -e 's/%//'", shell = True)
+    currentvolume = subprocess.check_output("amixer sget -M Master | grep -o -m1 ...% | sed -e 's/\[//' | sed -e 's/%//'", shell = True)
     muted = subprocess.check_output("amixer sget Master", shell = True)
     if 'off' in str(muted):
         print('off')
